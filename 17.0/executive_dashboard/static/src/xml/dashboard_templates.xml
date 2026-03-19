@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+
+<t t-name="executive_dashboard.Dashboard" owl="1">
+<div class="ed-root">
+
+    <!-- Controls bar — below Odoo's own topbar, full width, no squeeze -->
+    <div class="ed-controls-bar">
+        <div class="ed-controls-left">
+            <div class="ed-logo">
+                <div class="ed-logo-icon">📊</div>
+                <span>Executive Dashboard</span>
+            </div>
+            <div class="ed-live-badge">
+                <span class="ed-live-dot"/>
+                En vivo
+            </div>
+        </div>
+        <div class="ed-controls-right">
+            <select class="ed-select" t-on-change="onPeriodChange">
+                <option value="today"   t-att-selected="state.currentPeriod === 'today'   ? 'selected' : false">Hoy</option>
+                <option value="week"    t-att-selected="state.currentPeriod === 'week'    ? 'selected' : false">Esta semana</option>
+                <option value="month"   t-att-selected="state.currentPeriod === 'month'   ? 'selected' : false">Este mes</option>
+                <option value="quarter" t-att-selected="state.currentPeriod === 'quarter' ? 'selected' : false">Este trimestre</option>
+                <option value="year"      t-att-selected="state.currentPeriod === 'year'      ? 'selected' : false">Este año</option>
+                <option value="last_year" t-att-selected="state.currentPeriod === 'last_year' ? 'selected' : false">Año anterior</option>
+            </select>
+            <button class="ed-btn ed-btn-ghost" t-on-click="toggleEditMode">
+                <t t-if="state.editMode">✓ Guardar layout</t>
+                <t t-else="">✦ Personalizar</t>
+            </button>
+            <button class="ed-btn" t-on-click="refreshData" t-att-disabled="state.loading">
+                <t t-if="state.loading">⟳ Actualizando...</t>
+                <t t-else="">⟳ Actualizar</t>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div t-if="state.loading and !state.data" class="ed-loading">
+        <div class="ed-spinner"/>
+        <p>Cargando datos del dashboard...</p>
+    </div>
+
+    <!-- Error -->
+    <div t-elif="state.error" class="ed-main">
+        <div class="ed-error">
+            <p>⚠️ <t t-esc="state.error"/></p>
+            <button class="ed-btn" t-on-click="refreshData">Reintentar</button>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div t-elif="state.data" class="ed-main">
+
+        <div class="ed-page-header">
+            <div>
+                <p class="ed-page-title">Executive Overview</p>
+                <p class="ed-page-subtitle">
+                    <t t-esc="state.companyName"/> · Actualizado <t t-esc="state.lastUpdated"/>
+                </p>
+            </div>
+        </div>
+
+        <!-- KPI Row 1 -->
+        <div class="ed-kpi-grid">
+            <KPICard kpi="state.data.kpis.sales"     color="'blue'"   icon="'💼'"/>
+            <KPICard kpi="state.data.kpis.invoicing" color="'green'"  icon="'🧾'"/>
+            <KPICard kpi="state.data.kpis.purchases" color="'amber'"  icon="'📦'"/>
+            <KPICard kpi="state.data.kpis.stock"     color="'purple'" icon="'🏭'"/>
+        </div>
+
+        <!-- KPI Row 2 -->
+        <div class="ed-kpi-grid ed-kpi-grid-secondary">
+            <KPICard kpi="state.data.kpis.margin"      color="'teal'"   icon="'📈'"/>
+            <KPICard kpi="state.data.kpis.overdue"     color="'red'"    icon="'🔴'"/>
+            <KPICard kpi="state.data.kpis.orders_open" color="'indigo'" icon="'🛒'"/>
+            <div class="ed-kpi-card ed-kpi-gray ed-kpi-placeholder">
+                <div class="ed-kpi-header">
+                    <span class="ed-kpi-label">Más KPIs</span>
+                    <div class="ed-kpi-icon ed-icon-gray">⚙️</div>
+                </div>
+                <div class="ed-kpi-value ed-pro-label">Versión Pro</div>
+                <div class="ed-kpi-count">Margen neto, cobro medio, rotación...</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="ed-charts-row">
+            <ChartWidget
+                title="'Ventas vs Facturación'"
+                subtitle="'Comparativa mensual'"
+                chartData="state.data.charts.sales_evolution"
+                chartType="'bar'"
+            />
+            <ChartWidget
+                title="'Ventas por Categoría'"
+                subtitle="'Período actual'"
+                chartData="state.data.charts.sales_by_category"
+                chartType="'doughnut'"
+            />
+        </div>
+
+        <!-- Bottom -->
+        <div class="ed-bottom-row">
+            <div class="ed-card">
+                <div class="ed-card-header">
+                    <div>
+                        <p class="ed-card-title">Top Clientes</p>
+                        <p class="ed-card-subtitle">Por importe facturado</p>
+                    </div>
+                    <span class="ed-badge ed-badge-blue">
+                        <t t-esc="state.data.tables.top_customers.length"/> clientes
+                    </span>
+                </div>
+                <table class="ed-table">
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Importe</th>
+                            <th>Facturas</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-if="!state.data.tables.top_customers.length">
+                            <tr><td colspan="4" class="ed-empty">Sin datos en este período</td></tr>
+                        </t>
+                        <t t-foreach="state.data.tables.top_customers" t-as="c" t-key="c_index">
+                            <tr>
+                                <td><t t-esc="c.name"/></td>
+                                <td class="ed-mono"><t t-esc="c.total_formatted"/></td>
+                                <td class="ed-muted-text"><t t-esc="c.invoice_count"/></td>
+                                <td>
+                                    <span t-attf-class="ed-badge ed-badge-#{c.status.color}">
+                                        <t t-esc="c.status.label"/>
+                                    </span>
+                                </td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="ed-card">
+                <div class="ed-card-header">
+                    <div>
+                        <p class="ed-card-title">Alertas Activas</p>
+                        <p class="ed-card-subtitle">Requieren atención</p>
+                    </div>
+                    <t t-if="state.data.alerts.length">
+                        <span class="ed-badge ed-badge-red"><t t-esc="state.data.alerts.length"/> nueva(s)</span>
+                    </t>
+                    <t t-else="">
+                        <span class="ed-badge ed-badge-green">Todo OK ✓</span>
+                    </t>
+                </div>
+                <div class="ed-alert-list">
+                    <t t-if="!state.data.alerts.length">
+                        <p class="ed-empty">✓ Sin alertas activas</p>
+                    </t>
+                    <t t-foreach="state.data.alerts" t-as="alert" t-key="alert_index">
+                        <div t-attf-class="ed-alert-item ed-alert-#{alert.type}">
+                            <span class="ed-alert-icon"><t t-esc="alert.icon"/></span>
+                            <div>
+                                <p class="ed-alert-title"><t t-esc="alert.title"/></p>
+                                <p class="ed-alert-desc"><t t-esc="alert.description"/></p>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </div>
+        </div>
+
+        <t t-if="state.editMode">
+            <div class="ed-drag-hint">⠿ Modo edición — arrastra los widgets para reorganizar</div>
+        </t>
+
+    </div>
+</div>
+</t>
+
+<!-- ─── KPI Card ──────────────────────────────────────────── -->
+<t t-name="executive_dashboard.KPICard" owl="1">
+    <div t-attf-class="ed-kpi-card ed-kpi-#{props.color} #{props.editMode ? 'ed-edit-mode' : ''}">
+        <div class="ed-kpi-header">
+            <span class="ed-kpi-label"><t t-esc="props.kpi.label"/></span>
+            <div t-attf-class="ed-kpi-icon ed-icon-#{props.color}"><t t-esc="props.icon"/></div>
+        </div>
+        <div class="ed-kpi-value"><t t-esc="props.kpi.formatted"/></div>
+        <div class="ed-kpi-trend"
+             t-if="props.kpi.trend_pct !== null and props.kpi.trend_pct !== undefined">
+            <span t-attf-class="ed-trend-#{props.kpi.trend_direction}">
+                <t t-if="props.kpi.trend_direction === 'up'">↑</t>
+                <t t-else="">↓</t>
+                <t t-esc="Math.abs(props.kpi.trend_pct)"/>%
+            </span>
+            <span class="ed-trend-label">vs período anterior</span>
+        </div>
+        <div class="ed-kpi-count" t-if="props.kpi.margin_pct_label">
+            <t t-esc="props.kpi.margin_pct_label"/>
+        </div>
+        <div class="ed-kpi-count" t-elif="props.kpi.count">
+            <t t-esc="props.kpi.count"/> registros
+        </div>
+    </div>
+</t>
+
+<!-- ─── Chart Widget ──────────────────────────────────────── -->
+<t t-name="executive_dashboard.ChartWidget" owl="1">
+    <div class="ed-card">
+        <div class="ed-card-header">
+            <div>
+                <p class="ed-card-title"><t t-esc="props.title"/></p>
+                <p class="ed-card-subtitle"><t t-esc="props.subtitle"/></p>
+            </div>
+            <div t-if="props.chartType === 'bar'" class="ed-card-actions">
+                <span t-attf-class="ed-chip #{state.activeType === 'bar'  ? 'ed-chip-active' : ''}"
+                      t-on-click="() => this.setType('bar')">Barra</span>
+                <span t-attf-class="ed-chip #{state.activeType === 'line' ? 'ed-chip-active' : ''}"
+                      t-on-click="() => this.setType('line')">Línea</span>
+            </div>
+        </div>
+        <div class="ed-chart-wrapper">
+            <canvas t-ref="chartCanvas"/>
+        </div>
+    </div>
+</t>
+
+</templates>
