@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+        Default data is created dynamically per user when they first open the dashboard.
+        See: executive.dashboard.config._create_default_widgets()
+        No static records needed here.
+    -->
+</odoo>
