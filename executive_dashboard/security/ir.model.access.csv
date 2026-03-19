@@ -1,5 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_dashboard_config_user,executive.dashboard.config user,model_executive_dashboard_config,executive_dashboard.group_dashboard_user,1,1,1,0
-access_dashboard_config_manager,executive.dashboard.config manager,model_executive_dashboard_config,executive_dashboard.group_dashboard_manager,1,1,1,1
-access_dashboard_widget_user,executive.dashboard.widget user,model_executive_dashboard_widget,executive_dashboard.group_dashboard_user,1,1,1,0
-access_dashboard_widget_manager,executive.dashboard.widget manager,model_executive_dashboard_widget,executive_dashboard.group_dashboard_manager,1,1,1,1
