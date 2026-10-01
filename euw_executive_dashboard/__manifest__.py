@@ -50,11 +50,11 @@ Compatible with Odoo 15, 16, 17, 18 and 19 Community.
     ],
     'assets': {
         'web.assets_backend': [
-            'executive_dashboard/static/src/css/dashboard.css',
-            'executive_dashboard/static/src/xml/dashboard_templates.xml',
-            'executive_dashboard/static/src/js/widgets/kpi_card.js',
-            'executive_dashboard/static/src/js/widgets/chart_widget.js',
-            'executive_dashboard/static/src/js/dashboard_main.js',
+            'euw_executive_dashboard/static/src/css/dashboard.css',
+            'euw_executive_dashboard/static/src/xml/dashboard_templates.xml',
+            'euw_executive_dashboard/static/src/js/widgets/kpi_card.js',
+            'euw_executive_dashboard/static/src/js/widgets/chart_widget.js',
+            'euw_executive_dashboard/static/src/js/dashboard_main.js',
         ],
     },
     'installable': True,
