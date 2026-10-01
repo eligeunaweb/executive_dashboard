@@ -18,7 +18,7 @@ function _getQWeb() {
 class ExecutiveDashboard extends Component {
     constructor(...args) {
         super(...args);
-        this.state = useState({ loading:false, error:null, data:null, editMode:false, currentPeriod:"month", companyName:"", lastUpdated:"", configId:null });
+        this.state = useState({ loading:false, error:null, data:null, editMode:false, currentPeriod:"month", companyName:"", lastUpdated:"", configId:null, theme:localStorage.getItem("ed_theme") || "dark" });
         this._cache = new Map();
         this._refreshTimer = null;
         onMounted(async () => { await this._loadConfig(); await this._loadData(); this._startAutoRefresh(); });
@@ -47,6 +47,11 @@ class ExecutiveDashboard extends Component {
     async onPeriodChange(ev) { this.state.currentPeriod = ev.target.value; await this._loadData(true); }
     async refreshData() { this._cache.clear(); await this._loadData(true); }
     async toggleEditMode() { this.state.editMode = !this.state.editMode; }
+    toggleTheme() {
+        const theme = this.state.theme === "dark" ? "light" : "dark";
+        this.state.theme = theme;
+        localStorage.setItem("ed_theme", theme);
+    }
     _startAutoRefresh() { this._refreshTimer = setInterval(async () => { this._cache.clear(); await this._loadData(true); }, AUTO_REFRESH_MS); }
     _stopAutoRefresh() { if (this._refreshTimer) { clearInterval(this._refreshTimer); this._refreshTimer = null; } }
 }

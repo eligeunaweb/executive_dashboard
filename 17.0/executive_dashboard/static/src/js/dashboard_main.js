@@ -27,6 +27,7 @@ class ExecutiveDashboard extends Component {
             companyName:   "",
             lastUpdated:   "",
             configId:      null,
+            theme:         localStorage.getItem("ed_theme") || "dark",
         });
 
         this._cache        = new Map();
@@ -88,6 +89,12 @@ class ExecutiveDashboard extends Component {
     }
 
     // ─── User interactions ─────────────────────────────────────────────────────
+
+    toggleTheme() {
+        const theme = this.state.theme === "dark" ? "light" : "dark";
+        this.state.theme = theme;
+        localStorage.setItem("ed_theme", theme);
+    }
 
     async onPeriodChange(event) {
         this.state.currentPeriod = event.target.value;
