@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
 <t t-name="executive_dashboard.Dashboard" owl="1">
-<div class="ed-root">
+<div class="ed-root" t-att-data-theme="state.theme">
 
     <!-- Controls bar — below Odoo's own topbar, full width, no squeeze -->
     <div class="ed-controls-bar">
@@ -25,6 +25,10 @@
                 <option value="year"      t-att-selected="state.currentPeriod === 'year'      ? 'selected' : false">Este año</option>
                 <option value="last_year" t-att-selected="state.currentPeriod === 'last_year' ? 'selected' : false">Año anterior</option>
             </select>
+            <button class="ed-btn ed-btn-ghost" t-on-click="toggleTheme" title="Cambiar tema">
+                <t t-if="state.theme === 'dark'">☀️</t>
+                <t t-else="">🌙</t>
+            </button>
             <button class="ed-btn ed-btn-ghost" t-on-click="toggleEditMode">
                 <t t-if="state.editMode">✓ Guardar layout</t>
                 <t t-else="">✦ Personalizar</t>
