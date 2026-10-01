@@ -25,6 +25,7 @@ class ExecutiveDashboard extends Component {
             companyName:   "",
             lastUpdated:   "",
             configId:      null,
+            theme:         localStorage.getItem("ed_theme") || "dark",
         });
 
         this._cache        = new Map();
@@ -37,6 +38,12 @@ class ExecutiveDashboard extends Component {
         });
 
         onWillUnmount(() => this._stopAutoRefresh());
+    }
+
+    toggleTheme() {
+        const theme = this.state.theme === "dark" ? "light" : "dark";
+        this.state.theme = theme;
+        localStorage.setItem("ed_theme", theme);
     }
 
     async _post(url, params = {}) {
