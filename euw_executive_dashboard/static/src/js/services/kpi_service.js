@@ -54,4 +54,4 @@ const kpiServiceDefinition = {
     },
 };
 
-registry.category("services").add("executive_dashboard.kpi_service", kpiServiceDefinition);
+registry.category("services").add("euw_executive_dashboard.kpi_service", kpiServiceDefinition);

@@ -15,7 +15,7 @@ const PALETTE = {
 const DONUT_COLORS = ['#4f8ef7','#22c55e','#f59e0b','#a78bfa','#14b8a6','#ef4444','#fb923c','#e879f9'];
 
 export class ChartWidget extends Component {
-    static template  = "executive_dashboard.ChartWidget";
+    static template  = "euw_executive_dashboard.ChartWidget";
     static props     = {
         title:     String,
         subtitle:  { type: String, optional: true },
