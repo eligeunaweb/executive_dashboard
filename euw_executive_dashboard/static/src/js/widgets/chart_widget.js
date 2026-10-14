@@ -1,4 +1,4 @@
-odoo.define("executive_dashboard.chart_widget", function(require) {
+odoo.define("euw_executive_dashboard.chart_widget", function(require) {
 "use strict";
 const { Component, useState } = owl;
 const { useRef, onMounted, onWillUnmount } = owl.hooks;
@@ -40,7 +40,7 @@ class ChartWidget extends Component {
             plugins:{legend:{position:"bottom",labels:{color:"#64748b",boxWidth:10,padding:12,font:{size:11}}},tooltip:{backgroundColor:"#1a2133",borderColor:"#2d3a52",borderWidth:1,titleColor:"#e2e8f0",bodyColor:"#94a3b8",callbacks:{label:function(c){return" "+c.label+": €"+Number(c.raw).toLocaleString("es-ES",{maximumFractionDigits:0});}}}}}}
     }
 }
-ChartWidget.template = "executive_dashboard.ChartWidget";
+ChartWidget.template = "euw_executive_dashboard.ChartWidget";
 ChartWidget.defaultProps = { subtitle: "", chartType: "bar" };
 return { ChartWidget };
 });

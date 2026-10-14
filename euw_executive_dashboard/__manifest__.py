@@ -1,27 +1,27 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Executive Dashboard for Odoo Community',
-    'version': '15.0.1.3.0',
+    'version': '15.0.2.0.0',
     'category': 'Reporting/Dashboard',
-    'summary': 'Real-time executive KPIs, charts and alerts — no Enterprise license needed',
+    'summary': 'Free executive dashboard: sales, invoicing, overdue invoices and open orders with trends — no Enterprise license needed',
     'description': """
 Executive Dashboard for Odoo Community
 =======================================
-A professional real-time executive dashboard for Odoo Community.
-Get instant visibility into sales, invoicing, purchases, stock and more —
-all in one screen with live alerts and trend indicators.
+A free real-time executive dashboard for Odoo Community.
+See your key sales and invoicing figures in one screen, with trends against the previous period.
 
 Features
 --------
-- 8 KPI cards with trend vs prior period
-- Sales vs Invoicing comparison chart (bar/line toggle)
-- Sales by Category donut chart
-- Smart alerts: overdue invoices, low stock, late POs
-- Top Customers table with payment status
-- Period selector: today, week, month, quarter, year
-- Live auto-refresh
+- 4 KPI cards with trend vs prior period: sales, invoicing, overdue invoices and open sales orders
+- Sales vs Invoicing monthly chart
+- Period selector: month, quarter, year
 - Dark mode native
 - Multi-company support
+- Only requires Sales and Invoicing
+
+Upgrade to Executive Dashboard Pro for margin, purchases, stock value and up to 15 KPIs,
+sales by category, top customers, smart alerts, custom date ranges, auto-refresh and
+configurable drag & drop widgets.
 
 No Enterprise license required.
 Compatible with Odoo 15, 16, 17, 18 and 19 Community.
@@ -38,8 +38,6 @@ Compatible with Odoo 15, 16, 17, 18 and 19 Community.
         'base',
         'web',
         'sale_management',
-        'purchase',
-        'stock',
         'account',
     ],
     'data': [
