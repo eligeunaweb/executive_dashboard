@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <templates xml:space="preserve">
 
-<t t-name="executive_dashboard.Dashboard" owl="1">
+<t t-name="euw_executive_dashboard.Dashboard" owl="1">
 <div class="ed-root" t-att-data-theme="state.theme">
 
     <!-- Controls bar — below Odoo's own topbar, full width, no squeeze -->
@@ -11,28 +11,18 @@
                 <div class="ed-logo-icon">📊</div>
                 <span>Executive Dashboard</span>
             </div>
-            <div class="ed-live-badge">
-                <span class="ed-live-dot"/>
-                En vivo
-            </div>
         </div>
         <div class="ed-controls-right">
             <select class="ed-select" t-on-change="onPeriodChange">
-                <option value="today"   t-att-selected="state.currentPeriod === 'today'   ? 'selected' : false">Hoy</option>
-                <option value="week"    t-att-selected="state.currentPeriod === 'week'    ? 'selected' : false">Esta semana</option>
                 <option value="month"   t-att-selected="state.currentPeriod === 'month'   ? 'selected' : false">Este mes</option>
                 <option value="quarter" t-att-selected="state.currentPeriod === 'quarter' ? 'selected' : false">Este trimestre</option>
                 <option value="year"      t-att-selected="state.currentPeriod === 'year'      ? 'selected' : false">Este año</option>
-                <option value="last_year" t-att-selected="state.currentPeriod === 'last_year' ? 'selected' : false">Año anterior</option>
             </select>
             <button class="ed-btn ed-btn-ghost" t-on-click="toggleTheme" title="Cambiar tema">
                 <t t-if="state.theme === 'dark'">☀️</t>
                 <t t-else="">🌙</t>
             </button>
-            <button class="ed-btn ed-btn-ghost" t-on-click="toggleEditMode">
-                <t t-if="state.editMode">✓ Guardar layout</t>
-                <t t-else="">✦ Personalizar</t>
-            </button>
+            <span class="ed-btn ed-btn-ghost ed-pro-chip" title="Disponible en Executive Dashboard Pro">✦ Personalizar · Pro</span>
             <button class="ed-btn" t-on-click="refreshData" t-att-disabled="state.loading">
                 <t t-if="state.loading">⟳ Actualizando...</t>
                 <t t-else="">⟳ Actualizar</t>
@@ -66,26 +56,47 @@
             </div>
         </div>
 
-        <!-- KPI Row 1 -->
+        <!-- KPIs (versión gratuita) -->
         <div class="ed-kpi-grid">
-            <KPICard kpi="state.data.kpis.sales"     color="'blue'"   icon="'💼'"/>
-            <KPICard kpi="state.data.kpis.invoicing" color="'green'"  icon="'🧾'"/>
-            <KPICard kpi="state.data.kpis.purchases" color="'amber'"  icon="'📦'"/>
-            <KPICard kpi="state.data.kpis.stock"     color="'purple'" icon="'🏭'"/>
-        </div>
-
-        <!-- KPI Row 2 -->
-        <div class="ed-kpi-grid ed-kpi-grid-secondary">
-            <KPICard kpi="state.data.kpis.margin"      color="'teal'"   icon="'📈'"/>
+            <KPICard kpi="state.data.kpis.sales"       color="'blue'"   icon="'💼'"/>
+            <KPICard kpi="state.data.kpis.invoicing"   color="'green'"  icon="'🧾'"/>
             <KPICard kpi="state.data.kpis.overdue"     color="'red'"    icon="'🔴'"/>
             <KPICard kpi="state.data.kpis.orders_open" color="'indigo'" icon="'🛒'"/>
+        </div>
+
+        <!-- KPIs de la versión Pro -->
+        <div class="ed-kpi-grid ed-kpi-grid-secondary">
+            <div class="ed-kpi-card ed-kpi-gray ed-kpi-placeholder">
+                <div class="ed-kpi-header">
+                    <span class="ed-kpi-label">Margen</span>
+                    <div class="ed-kpi-icon ed-icon-gray">📈</div>
+                </div>
+                <div class="ed-kpi-value ed-pro-label">🔒 Pro</div>
+                <div class="ed-kpi-count">Margen bruto y neto</div>
+            </div>
+            <div class="ed-kpi-card ed-kpi-gray ed-kpi-placeholder">
+                <div class="ed-kpi-header">
+                    <span class="ed-kpi-label">Compras</span>
+                    <div class="ed-kpi-icon ed-icon-gray">📦</div>
+                </div>
+                <div class="ed-kpi-value ed-pro-label">🔒 Pro</div>
+                <div class="ed-kpi-count">Compras del período</div>
+            </div>
+            <div class="ed-kpi-card ed-kpi-gray ed-kpi-placeholder">
+                <div class="ed-kpi-header">
+                    <span class="ed-kpi-label">Valor de stock</span>
+                    <div class="ed-kpi-icon ed-icon-gray">🏭</div>
+                </div>
+                <div class="ed-kpi-value ed-pro-label">🔒 Pro</div>
+                <div class="ed-kpi-count">Inventario valorado</div>
+            </div>
             <div class="ed-kpi-card ed-kpi-gray ed-kpi-placeholder">
                 <div class="ed-kpi-header">
                     <span class="ed-kpi-label">Más KPIs</span>
                     <div class="ed-kpi-icon ed-icon-gray">⚙️</div>
                 </div>
-                <div class="ed-kpi-value ed-pro-label">Versión Pro</div>
-                <div class="ed-kpi-count">Margen neto, cobro medio, rotación...</div>
+                <div class="ed-kpi-value ed-pro-label">🔒 Pro</div>
+                <div class="ed-kpi-count">Pipeline CRM, cobro medio y hasta 15 KPIs</div>
             </div>
         </div>
 
@@ -97,96 +108,34 @@
                 chartData="state.data.charts.sales_evolution"
                 chartType="'bar'"
             />
-            <ChartWidget
-                title="'Ventas por Categoría'"
-                subtitle="'Período actual'"
-                chartData="state.data.charts.sales_by_category"
-                chartType="'doughnut'"
-            />
+            <div class="ed-card ed-locked-card">
+                <p class="ed-card-title">🔒 Ventas por categoría</p>
+                <p class="ed-locked-text">Gráfico circular de ventas por categoría de producto y cambio entre gráfico de barras y de líneas.</p>
+                <span class="ed-badge ed-badge-blue">Disponible en Executive Dashboard Pro</span>
+            </div>
         </div>
 
-        <!-- Bottom -->
+        <!-- Bottom (versión Pro) -->
         <div class="ed-bottom-row">
-            <div class="ed-card">
-                <div class="ed-card-header">
-                    <div>
-                        <p class="ed-card-title">Top Clientes</p>
-                        <p class="ed-card-subtitle">Por importe facturado</p>
-                    </div>
-                    <span class="ed-badge ed-badge-blue">
-                        <t t-esc="state.data.tables.top_customers.length"/> clientes
-                    </span>
-                </div>
-                <table class="ed-table">
-                    <thead>
-                        <tr>
-                            <th>Cliente</th>
-                            <th>Importe</th>
-                            <th>Facturas</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-if="!state.data.tables.top_customers.length">
-                            <tr><td colspan="4" class="ed-empty">Sin datos en este período</td></tr>
-                        </t>
-                        <t t-foreach="state.data.tables.top_customers" t-as="c" t-key="c_index">
-                            <tr>
-                                <td><t t-esc="c.name"/></td>
-                                <td class="ed-mono"><t t-esc="c.total_formatted"/></td>
-                                <td class="ed-muted-text"><t t-esc="c.invoice_count"/></td>
-                                <td>
-                                    <span t-attf-class="ed-badge ed-badge-#{c.status.color}">
-                                        <t t-esc="c.status.label"/>
-                                    </span>
-                                </td>
-                            </tr>
-                        </t>
-                    </tbody>
-                </table>
+            <div class="ed-card ed-locked-card">
+                <p class="ed-card-title">🔒 Top Clientes</p>
+                <p class="ed-locked-text">Clientes con mayor facturación del período y su estado de pago.</p>
+                <span class="ed-badge ed-badge-blue">Disponible en Executive Dashboard Pro</span>
             </div>
-
-            <div class="ed-card">
-                <div class="ed-card-header">
-                    <div>
-                        <p class="ed-card-title">Alertas Activas</p>
-                        <p class="ed-card-subtitle">Requieren atención</p>
-                    </div>
-                    <t t-if="state.data.alerts.length">
-                        <span class="ed-badge ed-badge-red"><t t-esc="state.data.alerts.length"/> nueva(s)</span>
-                    </t>
-                    <t t-else="">
-                        <span class="ed-badge ed-badge-green">Todo OK ✓</span>
-                    </t>
-                </div>
-                <div class="ed-alert-list">
-                    <t t-if="!state.data.alerts.length">
-                        <p class="ed-empty">✓ Sin alertas activas</p>
-                    </t>
-                    <t t-foreach="state.data.alerts" t-as="alert" t-key="alert_index">
-                        <div t-attf-class="ed-alert-item ed-alert-#{alert.type}">
-                            <span class="ed-alert-icon"><t t-esc="alert.icon"/></span>
-                            <div>
-                                <p class="ed-alert-title"><t t-esc="alert.title"/></p>
-                                <p class="ed-alert-desc"><t t-esc="alert.description"/></p>
-                            </div>
-                        </div>
-                    </t>
-                </div>
+            <div class="ed-card ed-locked-card">
+                <p class="ed-card-title">🔒 Alertas inteligentes</p>
+                <p class="ed-locked-text">Facturas vencidas, productos bajo punto de reorden, compras con retraso y facturas en borrador.</p>
+                <span class="ed-badge ed-badge-blue">Disponible en Executive Dashboard Pro</span>
             </div>
         </div>
-
-        <t t-if="state.editMode">
-            <div class="ed-drag-hint">⠿ Modo edición — arrastra los widgets para reorganizar</div>
-        </t>
 
     </div>
 </div>
 </t>
 
 <!-- ─── KPI Card ──────────────────────────────────────────── -->
-<t t-name="executive_dashboard.KPICard" owl="1">
-    <div t-attf-class="ed-kpi-card ed-kpi-#{props.color} #{props.editMode ? 'ed-edit-mode' : ''}">
+<t t-name="euw_executive_dashboard.KPICard" owl="1">
+    <div t-attf-class="ed-kpi-card ed-kpi-#{props.color}">
         <div class="ed-kpi-header">
             <span class="ed-kpi-label"><t t-esc="props.kpi.label"/></span>
             <div t-attf-class="ed-kpi-icon ed-icon-#{props.color}"><t t-esc="props.icon"/></div>
@@ -211,18 +160,12 @@
 </t>
 
 <!-- ─── Chart Widget ──────────────────────────────────────── -->
-<t t-name="executive_dashboard.ChartWidget" owl="1">
+<t t-name="euw_executive_dashboard.ChartWidget" owl="1">
     <div class="ed-card">
         <div class="ed-card-header">
             <div>
                 <p class="ed-card-title"><t t-esc="props.title"/></p>
                 <p class="ed-card-subtitle"><t t-esc="props.subtitle"/></p>
-            </div>
-            <div t-if="props.chartType === 'bar'" class="ed-card-actions">
-                <span t-attf-class="ed-chip #{state.activeType === 'bar'  ? 'ed-chip-active' : ''}"
-                      t-on-click="() => this.setType('bar')">Barra</span>
-                <span t-attf-class="ed-chip #{state.activeType === 'line' ? 'ed-chip-active' : ''}"
-                      t-on-click="() => this.setType('line')">Línea</span>
             </div>
         </div>
         <div class="ed-chart-wrapper">
