@@ -14,7 +14,7 @@
         name="Dashboard"
         action="action_executive_dashboard"
         sequence="1"
-        web_icon="executive_dashboard,static/description/icon.png"
+        web_icon="euw_executive_dashboard,static/description/icon.png"
         groups="base.group_user"
     />
 

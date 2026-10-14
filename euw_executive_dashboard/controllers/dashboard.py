@@ -31,20 +31,12 @@ class ExecutiveDashboardController(http.Controller):
                 'kpis': {
                     'sales':       self._get_sales_kpi(df, dt, prev_df, prev_dt, company_id),
                     'invoicing':   self._get_invoicing_kpi(df, dt, prev_df, prev_dt, company_id),
-                    'purchases':   self._get_purchases_kpi(df, dt, prev_df, prev_dt, company_id),
-                    'stock':       self._get_stock_kpi(company_id),
-                    'margin':      self._get_margin_kpi(df, dt, prev_df, prev_dt, company_id),
                     'overdue':     self._get_overdue_kpi(company_id),
                     'orders_open': self._get_open_orders_kpi(company_id),
                 },
                 'charts': {
-                    'sales_evolution':   self._get_sales_evolution(df, dt, company_id),
-                    'sales_by_category': self._get_sales_by_category(df, dt, company_id),
+                    'sales_evolution': self._get_sales_evolution(df, dt, company_id),
                 },
-                'tables': {
-                    'top_customers': self._get_top_customers(df, dt, company_id),
-                },
-                'alerts': self._get_alerts(company_id),
             }
         except Exception as e:
             _logger.error('Dashboard data error: %s', str(e), exc_info=True)
@@ -63,14 +55,6 @@ class ExecutiveDashboardController(http.Controller):
             } for w in config.widget_ids if w.active],
         }
 
-    @http.route('/executive_dashboard/save_layout', type='json', auth='user', methods=['POST'])
-    def save_layout(self, config_id, layout_json):
-        config = request.env['executive.dashboard.config'].browse(config_id)
-        if config.user_id.id != request.env.uid:
-            return {'success': False, 'error': 'Permiso denegado'}
-        config.save_layout(layout_json)
-        return {'success': True}
-
     # ─── Helpers: table/column existence ──────────────────────────────────────
 
     def _table_exists(self, table):
@@ -78,13 +62,6 @@ class ExecutiveDashboardController(http.Controller):
             SELECT 1 FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name = %s
         """, (table,))
-        return request.env.cr.fetchone() is not None
-
-    def _column_exists(self, table, column):
-        request.env.cr.execute("""
-            SELECT 1 FROM information_schema.columns
-            WHERE table_name = %s AND column_name = %s
-        """, (table, column))
         return request.env.cr.fetchone() is not None
 
     # ─── KPIs ──────────────────────────────────────────────────────────────────
@@ -146,117 +123,6 @@ class ExecutiveDashboardController(http.Controller):
         except Exception as e:
             _logger.warning('Invoicing KPI error: %s', e)
             return self._empty_kpi('Facturación', currency)
-
-    def _get_purchases_kpi(self, df, dt, prev_df, prev_dt, company_id):
-        currency = request.env.company.currency_id.symbol
-        if not self._table_exists('purchase_order'):
-            return self._empty_kpi('Compras', currency)
-        try:
-            cr = request.env.cr
-            cr.execute("""
-                SELECT COUNT(*) as count, COALESCE(SUM(amount_total), 0) as total
-                FROM purchase_order
-                WHERE state IN ('purchase', 'done') AND company_id = %s
-                  AND date_order::date BETWEEN %s AND %s
-            """, (company_id, df, dt))
-            current = cr.dictfetchone()
-            cr.execute("""
-                SELECT COALESCE(SUM(amount_total), 0) as total
-                FROM purchase_order
-                WHERE state IN ('purchase', 'done') AND company_id = %s
-                  AND date_order::date BETWEEN %s AND %s
-            """, (company_id, prev_df, prev_dt))
-            previous = cr.dictfetchone()
-            return self._build_kpi(current['total'], current['count'], previous['total'],
-                                   'Compras', currency)
-        except Exception as e:
-            _logger.warning('Purchases KPI error: %s', e)
-            return self._empty_kpi('Compras', currency)
-
-    def _get_stock_kpi(self, company_id):
-        currency = request.env.company.currency_id.symbol
-        if not self._table_exists('stock_valuation_layer'):
-            return {
-                'value': 0, 'count': 0,
-                'formatted': self._format_currency(0, currency),
-                'trend_pct': None,
-                'label': 'Valor Stock',
-                'note': 'Requiere módulo Inventario con valoración',
-            }
-        try:
-            cr = request.env.cr
-            cr.execute("""
-                SELECT COALESCE(SUM(svl.value), 0) AS total_value,
-                       COUNT(DISTINCT svl.product_id) AS product_count
-                FROM stock_valuation_layer svl
-                WHERE svl.company_id = %s
-            """, (company_id,))
-            result = cr.dictfetchone()
-            value = float(result['total_value']) if result else 0.0
-            count = int(result['product_count']) if result else 0
-            return {
-                'value': value, 'count': count,
-                'formatted': self._format_currency(value, currency),
-                'trend_pct': None,
-                'label': 'Valor Stock',
-            }
-        except Exception as e:
-            _logger.warning('Stock KPI error: %s', e)
-            return self._empty_kpi('Valor Stock', currency)
-
-    def _get_margin_kpi(self, df, dt, prev_df, prev_dt, company_id):
-        env = request.env
-        currency = env.company.currency_id.symbol
-        if not self._table_exists('sale_order'):
-            return self._empty_kpi('Ventas Netas', currency)
-        try:
-            if self._column_exists('sale_order_line', 'margin'):
-                env.cr.execute("""
-                    SELECT COALESCE(SUM(sol.margin), 0) AS margin
-                    FROM sale_order_line sol JOIN sale_order so ON so.id = sol.order_id
-                    WHERE so.state IN ('sale','done') AND so.company_id = %s
-                      AND so.date_order::date BETWEEN %s AND %s
-                """, (company_id, df, dt))
-                cur_m = float(env.cr.fetchone()[0] or 0)
-                env.cr.execute("""
-                    SELECT COALESCE(SUM(sol.margin), 0) AS margin
-                    FROM sale_order_line sol JOIN sale_order so ON so.id = sol.order_id
-                    WHERE so.state IN ('sale','done') AND so.company_id = %s
-                      AND so.date_order::date BETWEEN %s AND %s
-                """, (company_id, prev_df, prev_dt))
-                prev_m = float(env.cr.fetchone()[0] or 0)
-                env.cr.execute("""
-                    SELECT COALESCE(SUM(sol.price_subtotal), 0)
-                    FROM sale_order_line sol JOIN sale_order so ON so.id = sol.order_id
-                    WHERE so.state IN ('sale','done') AND so.company_id = %s
-                      AND so.date_order::date BETWEEN %s AND %s
-                """, (company_id, df, dt))
-                revenue = float(env.cr.fetchone()[0] or 0)
-                margin_pct = (cur_m / revenue * 100) if revenue > 0 else 0.0
-                kpi = self._build_kpi(cur_m, 0, prev_m, 'Margen Bruto', currency)
-                kpi['margin_pct_label'] = f"{margin_pct:.1f}% de margen"
-                return kpi
-
-            env.cr.execute("""
-                SELECT COALESCE(SUM(sol.price_subtotal), 0)
-                FROM sale_order_line sol JOIN sale_order so ON so.id = sol.order_id
-                WHERE so.state IN ('sale','done') AND so.company_id = %s
-                  AND so.date_order::date BETWEEN %s AND %s
-            """, (company_id, df, dt))
-            revenue = float(env.cr.fetchone()[0] or 0)
-            env.cr.execute("""
-                SELECT COALESCE(SUM(sol.price_subtotal), 0)
-                FROM sale_order_line sol JOIN sale_order so ON so.id = sol.order_id
-                WHERE so.state IN ('sale','done') AND so.company_id = %s
-                  AND so.date_order::date BETWEEN %s AND %s
-            """, (company_id, prev_df, prev_dt))
-            prev_revenue = float(env.cr.fetchone()[0] or 0)
-            kpi = self._build_kpi(revenue, 0, prev_revenue, 'Ventas Netas', currency)
-            kpi['margin_pct_label'] = 'Instala sale_margin para margen real'
-            return kpi
-        except Exception as e:
-            _logger.warning('Margin KPI error: %s', e)
-            return self._empty_kpi('Ventas Netas', currency)
 
     def _get_overdue_kpi(self, company_id):
         currency = request.env.company.currency_id.symbol
@@ -380,178 +246,6 @@ class ExecutiveDashboardController(http.Controller):
             _logger.warning('Sales evolution chart error: %s', e)
             return {'labels': [], 'values': [], 'label': 'Facturación'}
 
-    def _get_sales_by_category(self, df, dt, company_id):
-        try:
-            cr = request.env.cr
-            if self._table_exists('sale_order'):
-                cr.execute("""
-                    SELECT COALESCE(pc.complete_name, 'Sin categoría') AS category,
-                           COALESCE(SUM(sol.price_subtotal), 0) AS total
-                    FROM sale_order_line sol
-                    JOIN sale_order so      ON so.id  = sol.order_id
-                    JOIN product_product pp ON pp.id  = sol.product_id
-                    JOIN product_template pt ON pt.id = pp.product_tmpl_id
-                    LEFT JOIN product_category pc ON pc.id = pt.categ_id
-                    WHERE so.state IN ('sale', 'done') AND so.company_id = %s
-                      AND so.date_order::date BETWEEN %s AND %s
-                    GROUP BY pc.complete_name ORDER BY total DESC LIMIT 6
-                """, (company_id, df, dt))
-                rows = cr.dictfetchall()
-                if rows and sum(float(r['total']) for r in rows) > 0:
-                    return {
-                        'labels': [r['category'] for r in rows],
-                        'values': [float(r['total']) for r in rows],
-                    }
-
-            if self._table_exists('account_move'):
-                cr.execute("""
-                    SELECT rp.name AS category,
-                           COALESCE(SUM(am.amount_total_signed), 0) AS total
-                    FROM account_move am
-                    JOIN res_partner rp ON rp.id = am.partner_id
-                    WHERE am.move_type = 'out_invoice' AND am.state = 'posted'
-                      AND am.company_id = %s AND am.invoice_date BETWEEN %s AND %s
-                    GROUP BY rp.name ORDER BY total DESC LIMIT 6
-                """, (company_id, df, dt))
-                rows = cr.dictfetchall()
-                return {
-                    'labels': [r['category'] for r in rows],
-                    'values': [float(r['total']) for r in rows],
-                }
-            return {'labels': [], 'values': []}
-        except Exception as e:
-            _logger.warning('Sales by category chart error: %s', e)
-            return {'labels': [], 'values': []}
-
-    # ─── Tables ────────────────────────────────────────────────────────────────
-
-    def _get_top_customers(self, df, dt, company_id, limit=8):
-        if not self._table_exists('account_move'):
-            return []
-        try:
-            cr = request.env.cr
-            cr.execute("""
-                SELECT rp.name as customer_name,
-                       COALESCE(SUM(am.amount_total_signed), 0) as total_invoiced,
-                       COALESCE(SUM(am.amount_residual_signed), 0) as total_pending,
-                       COUNT(am.id) as invoice_count,
-                       MAX(am.payment_state) as payment_state
-                FROM account_move am
-                JOIN res_partner rp ON rp.id = am.partner_id
-                WHERE am.move_type = 'out_invoice' AND am.state = 'posted'
-                  AND am.company_id = %s AND am.invoice_date BETWEEN %s AND %s
-                GROUP BY rp.name ORDER BY total_invoiced DESC LIMIT %s
-            """, (company_id, df, dt, limit))
-            rows = cr.dictfetchall()
-            currency = request.env.company.currency_id.symbol
-            return [{
-                'name':            r['customer_name'],
-                'total':           float(r['total_invoiced']),
-                'total_formatted': self._format_currency(r['total_invoiced'], currency),
-                'pending':         float(r['total_pending']),
-                'invoice_count':   r['invoice_count'],
-                'status':          self._payment_status_label(r['payment_state']),
-            } for r in rows]
-        except Exception as e:
-            _logger.warning('Top customers error: %s', e)
-            return []
-
-    # ─── Alerts ────────────────────────────────────────────────────────────────
-
-    def _get_alerts(self, company_id):
-        alerts = []
-        currency = request.env.company.currency_id.symbol
-
-        if self._table_exists('account_move'):
-            try:
-                cr = request.env.cr
-                cr.execute("""
-                    SELECT COUNT(*) as count, COALESCE(SUM(amount_residual_signed), 0) as total
-                    FROM account_move
-                    WHERE move_type = 'out_invoice' AND state = 'posted'
-                      AND payment_state IN ('not_paid', 'partial')
-                      AND invoice_date_due < CURRENT_DATE AND company_id = %s
-                """, (company_id,))
-                overdue = cr.dictfetchone()
-                if overdue and overdue['count'] > 0:
-                    alerts.append({
-                        'type': 'critical', 'icon': '🚨',
-                        'title': f"{overdue['count']} factura(s) vencida(s)",
-                        'description': f"Total: {self._format_currency(overdue['total'], currency)}",
-                        'action': 'open_overdue_invoices',
-                    })
-            except Exception as e:
-                _logger.warning('Overdue alert error: %s', e)
-
-        if self._table_exists('stock_warehouse_orderpoint') and self._table_exists('stock_quant'):
-            try:
-                cr = request.env.cr
-                cr.execute("""
-                    SELECT COUNT(DISTINCT ob.product_id) as count
-                    FROM stock_warehouse_orderpoint ob
-                    JOIN product_product pp ON pp.id = ob.product_id
-                    LEFT JOIN (
-                        SELECT sq.product_id, SUM(sq.quantity) as qty_on_hand
-                        FROM stock_quant sq
-                        JOIN stock_location sl ON sl.id = sq.location_id
-                        WHERE sl.usage = 'internal' AND sl.company_id = %s
-                        GROUP BY sq.product_id
-                    ) quant ON quant.product_id = ob.product_id
-                    WHERE ob.company_id = %s
-                      AND COALESCE(quant.qty_on_hand, 0) < ob.product_min_qty
-                      AND pp.active = true
-                """, (company_id, company_id))
-                low_stock = cr.dictfetchone()
-                if low_stock and low_stock['count'] > 0:
-                    alerts.append({
-                        'type': 'warning', 'icon': '⚠️',
-                        'title': f"{low_stock['count']} producto(s) bajo punto de reorden",
-                        'description': 'Revisar y crear órdenes de compra',
-                        'action': 'open_low_stock',
-                    })
-            except Exception as e:
-                _logger.warning('Low stock alert error: %s', e)
-
-        if self._table_exists('purchase_order'):
-            try:
-                cr = request.env.cr
-                cr.execute("""
-                    SELECT COUNT(*) as count FROM purchase_order
-                    WHERE state = 'purchase' AND company_id = %s
-                      AND date_planned::date < CURRENT_DATE
-                """, (company_id,))
-                late_po = cr.dictfetchone()
-                if late_po and late_po['count'] > 0:
-                    alerts.append({
-                        'type': 'warning', 'icon': '📦',
-                        'title': f"{late_po['count']} orden(es) de compra con retraso",
-                        'description': 'La fecha de entrega esperada ha pasado',
-                        'action': 'open_late_po',
-                    })
-            except Exception as e:
-                _logger.warning('Late PO alert error: %s', e)
-
-        if self._table_exists('account_move'):
-            try:
-                cr = request.env.cr
-                cr.execute("""
-                    SELECT COUNT(*) as count, COALESCE(SUM(amount_total), 0) as total
-                    FROM account_move
-                    WHERE move_type = 'out_invoice' AND state = 'draft' AND company_id = %s
-                """, (company_id,))
-                draft_inv = cr.dictfetchone()
-                if draft_inv and draft_inv['count'] > 0:
-                    alerts.append({
-                        'type': 'info', 'icon': 'ℹ️',
-                        'title': f"{draft_inv['count']} factura(s) en borrador",
-                        'description': f"Valor total: {self._format_currency(draft_inv['total'], currency)}",
-                        'action': 'open_draft_invoices',
-                    })
-            except Exception as e:
-                _logger.warning('Draft invoices alert error: %s', e)
-
-        return alerts
-
     # ─── Date helpers ──────────────────────────────────────────────────────────
 
     def _get_date_range(self, period, date_from=None, date_to=None):
@@ -610,13 +304,3 @@ class ExecutiveDashboardController(http.Controller):
         elif value >= 1_000:    return f"{symbol}{value/1_000:.1f}k"
         else:                   return f"{symbol}{value:,.0f}"
 
-    def _payment_status_label(self, state):
-        mapping = {
-            'paid':             {'label': 'Cobrado',   'color': 'green'},
-            'in_payment':       {'label': 'En pago',   'color': 'blue'},
-            'partial':          {'label': 'Parcial',   'color': 'amber'},
-            'not_paid':         {'label': 'Pendiente', 'color': 'amber'},
-            'reversed':         {'label': 'Revertido', 'color': 'gray'},
-            'invoicing_legacy': {'label': 'Legado',    'color': 'gray'},
-        }
-        return mapping.get(state, {'label': state or '', 'color': 'gray'})
