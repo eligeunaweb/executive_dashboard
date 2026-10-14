@@ -553,3 +553,9 @@
 .ed-root[data-theme="light"] .ed-chip { background:#f8fafc; border-color:#e2e8f0; }
 .ed-root[data-theme="light"] .ed-chip:hover { background:rgba(79,142,247,.10); }
 .ed-root[data-theme="light"] .ed-drag-hint { background:#fff; border-color:#cbd5e1; }
+
+/* ── Funciones de la versión Pro (bloqueadas en la gratuita) ─────────────── */
+.ed-locked-card { display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+                  gap: 10px; min-height: 180px; opacity: .85; border-style: dashed !important; }
+.ed-locked-text { margin: 0; font-size: 13px; opacity: .75; max-width: 420px; }
+.ed-pro-chip { cursor: default; opacity: .8; }

@@ -1,15 +1,16 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, useState, onMounted } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
 import { KPICard } from "./widgets/kpi_card";
 import { ChartWidget } from "./widgets/chart_widget";
 
-const AUTO_REFRESH_MS = 5 * 60 * 1000;
+// Periodos de la versión gratuita (hoy, semana, año anterior y rangos a medida: versión Pro)
+const FREE_PERIODS = ["month", "quarter", "year"];
 
 class ExecutiveDashboard extends Component {
-    static template = "executive_dashboard.Dashboard";
+    static template = "euw_executive_dashboard.Dashboard";
     static components = { KPICard, ChartWidget };
 
     setup() {
@@ -21,8 +22,6 @@ class ExecutiveDashboard extends Component {
             loading:       false,
             error:         null,
             data:          null,
-            isLive:        true,
-            editMode:      false,
             currentPeriod: "month",
             companyName:   "",
             lastUpdated:   "",
@@ -31,15 +30,11 @@ class ExecutiveDashboard extends Component {
         });
 
         this._cache        = new Map();
-        this._refreshTimer = null;
 
         onMounted(async () => {
             await this._loadConfig();
             await this._loadData();
-            this._startAutoRefresh();
         });
-
-        onWillUnmount(() => this._stopAutoRefresh());
     }
 
     // ─── HTTP fetch helper ─────────────────────────────────────────────────────
@@ -82,7 +77,7 @@ class ExecutiveDashboard extends Component {
         try {
             const config = await this._post("/executive_dashboard/config", {});
             this.state.configId      = config.config_id;
-            this.state.currentPeriod = config.default_period || "month";
+            this.state.currentPeriod = FREE_PERIODS.includes(config.default_period) ? config.default_period : "month";
         } catch (e) {
             console.error("Config load error:", e);
         }
@@ -109,12 +104,6 @@ class ExecutiveDashboard extends Component {
 
     // ─── User interactions ─────────────────────────────────────────────────────
 
-    toggleTheme() {
-        const theme = this.state.theme === "dark" ? "light" : "dark";
-        this.state.theme = theme;
-        localStorage.setItem("ed_theme", theme);
-    }
-
     async onPeriodChange(event) {
         this.state.currentPeriod = event.target.value;
         await this._loadData(true);
@@ -126,41 +115,10 @@ class ExecutiveDashboard extends Component {
         this.notification.add("Dashboard actualizado", { type: "success" });
     }
 
-    async toggleEditMode() {
-        if (this.state.editMode) {
-            try {
-                await this._post("/executive_dashboard/save_layout", {
-                    config_id:   this.state.configId,
-                    layout_json: JSON.stringify([]),
-                });
-                this.notification.add("Layout guardado", { type: "success" });
-            } catch (e) {
-                this.notification.add("No se pudo guardar el layout", { type: "warning" });
-            }
-            this.state.editMode = false;
-        } else {
-            this.state.editMode = true;
-            this.notification.add(
-                "Modo edición — en la versión Pro podrás arrastrar los widgets",
-                { type: "info", sticky: false }
-            );
-        }
-    }
-
-    // ─── Auto refresh ──────────────────────────────────────────────────────────
-
-    _startAutoRefresh() {
-        this._refreshTimer = setInterval(async () => {
-            this._cache.clear();
-            await this._loadData(true);
-        }, AUTO_REFRESH_MS);
-    }
-
-    _stopAutoRefresh() {
-        if (this._refreshTimer) {
-            clearInterval(this._refreshTimer);
-            this._refreshTimer = null;
-        }
+    toggleTheme() {
+        const theme = this.state.theme === "dark" ? "light" : "dark";
+        this.state.theme = theme;
+        localStorage.setItem("ed_theme", theme);
     }
 }
 

@@ -14,7 +14,7 @@
 import { Component } from "@odoo/owl";
 
 export class KPICard extends Component {
-    static template = "executive_dashboard.KPICard";
+    static template = "euw_executive_dashboard.KPICard";
     static props = {
         kpi: Object,
         color: { type: String, optional: true },
