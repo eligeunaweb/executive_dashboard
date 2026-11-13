@@ -27,7 +27,7 @@ No Enterprise license required.
 Compatible with Odoo 15, 16, 17, 18 and 19 Community.
     """,
     'author': 'Álvaro Martínez',
-    'website': 'https://eligeunaweb.es',
+    'website': 'https://alvaromh.com',
     'license': 'OPL-1',
     'price': 0.00,
     'currency': 'EUR',
@@ -58,5 +58,5 @@ Compatible with Odoo 15, 16, 17, 18 and 19 Community.
     'installable': True,
     'application': True,
     'auto_install': False,
-    'support': 'soporte@eligeunaweb.com',
+    'support': 'contacto@alvaromh.com',
 }
