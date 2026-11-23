@@ -96,7 +96,7 @@
                     <div class="ed-kpi-icon ed-icon-gray">⚙️</div>
                 </div>
                 <div class="ed-kpi-value ed-pro-label">🔒 Pro</div>
-                <div class="ed-kpi-count">Pipeline CRM, cobro medio y hasta 15 KPIs</div>
+                <div class="ed-kpi-count">Pipeline CRM, plazo medio de cobro y hasta 15 KPIs</div>
             </div>
         </div>
 
@@ -109,8 +109,8 @@
                 chartType="'bar'"
             />
             <div class="ed-card ed-locked-card">
-                <p class="ed-card-title">🔒 Ventas por categoría</p>
-                <p class="ed-locked-text">Gráfico circular de ventas por categoría de producto y cambio entre gráfico de barras y de líneas.</p>
+                <p class="ed-card-title">🔒 Widgets configurables</p>
+                <p class="ed-locked-text">Elige el KPI, el período, el tipo de gráfico, el color y el tamaño de cada widget, y ordénalos arrastrando.</p>
                 <span class="ed-badge ed-badge-blue">Disponible en Executive Dashboard Pro</span>
             </div>
         </div>
@@ -119,12 +119,12 @@
         <div class="ed-bottom-row">
             <div class="ed-card ed-locked-card">
                 <p class="ed-card-title">🔒 Top Clientes</p>
-                <p class="ed-locked-text">Clientes con mayor facturación del período y su estado de pago.</p>
+                <p class="ed-locked-text">Los clientes con mayor facturación del mes y su estado de pago.</p>
                 <span class="ed-badge ed-badge-blue">Disponible en Executive Dashboard Pro</span>
             </div>
             <div class="ed-card ed-locked-card">
                 <p class="ed-card-title">🔒 Alertas inteligentes</p>
-                <p class="ed-locked-text">Facturas vencidas, productos bajo punto de reorden, compras con retraso y facturas en borrador.</p>
+                <p class="ed-locked-text">Facturas vencidas, facturas en borrador y compras con retraso.</p>
                 <span class="ed-badge ed-badge-blue">Disponible en Executive Dashboard Pro</span>
             </div>
         </div>
