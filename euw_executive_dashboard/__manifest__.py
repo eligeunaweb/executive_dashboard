@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'Executive Dashboard for Odoo Community',
-    'version': '16.0.2.0.0',
+    'version': '16.0.2.0.1',
     'category': 'Reporting/Dashboard',
     'summary': 'Free executive dashboard: sales, invoicing, overdue invoices and open orders with trends — no Enterprise license needed',
     'description': """
@@ -20,7 +20,7 @@ Features
 - Only requires Sales and Invoicing
 
 Upgrade to Executive Dashboard Pro for margin, purchases, stock value and up to 15 KPIs,
-sales by category, top customers, smart alerts, custom date ranges, auto-refresh and
+top customers, alerts, a period per widget, CSV and PDF export and
 configurable drag & drop widgets.
 
 No Enterprise license required.
