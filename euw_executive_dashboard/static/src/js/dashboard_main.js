@@ -3,6 +3,7 @@
 import { Component, useState, onMounted } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { registry } from "@web/core/registry";
+import { user } from "@web/core/user";
 import { KPICard } from "./widgets/kpi_card";
 import { ChartWidget } from "./widgets/chart_widget";
 
@@ -88,7 +89,7 @@ class ExecutiveDashboard extends Component {
             const result = await this._fetchData(this.state.currentPeriod, forceRefresh);
             if (result?.success) {
                 this.state.data        = result;
-                this.state.companyName = odoo?.session_info?.user_companies?.current_company?.name || "";
+                this.state.companyName = user.activeCompany?.name || "";
                 this.state.lastUpdated = new Date().toLocaleTimeString("es-ES");
             } else {
                 this.state.error = result?.error || "Error al cargar datos";
